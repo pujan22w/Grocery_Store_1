@@ -27,8 +27,6 @@ passport.use(
     (req, accessToken, refreshToken, profile, done) => {
       // Here, you typically find or create a user in the database
       try {
-        console.log("Profile Information:", profile);
-        console.log("Email Information:", profile.emails[0].value);
         // For now, we'll just return the profile as is
         done(null, profile);
       } catch (err) {
