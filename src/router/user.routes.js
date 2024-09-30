@@ -10,13 +10,14 @@ import {
   admin,
   findUser,
   requestPasswordReset,
+  googleLoginSuccess,
+  googleLoginFailed,
+  googleAuth,
+  googleCallback,
+  googleLogout,
 } from "../controller/user.controller.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
-
-import passport from "passport";
-
-import passport from "../password.js";
 
 const router = Router();
 
@@ -36,5 +37,12 @@ router.route("/change-password").post(verifyJWT, changePassword);
 router.route("/admin").post(admin);
 router.route("/findme").post(findUser);
 router.route("/forgotpassword").post(requestPasswordReset);
+
+router.route("/login/success").get(googleLoginSuccess);
+
+router.route("/google/login/failed").get(googleLoginFailed);
+router.route("/google").get(googleAuth);
+router.route("/google/callback").get(googleCallback);
+router.route("/google/logout").get(googleLogout);
 
 export default router;

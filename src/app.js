@@ -4,6 +4,8 @@ import cookieParser from "cookie-parser";
 
 import cors from "cors";
 
+import passport from "./password.js";
+
 const app = express();
 
 app.use(
@@ -19,6 +21,9 @@ app.use(
     limit: "16kb",
   })
 );
+
+import session from "express-session";
+
 app.use(express.static("public"));
 
 app.use(
@@ -29,8 +34,10 @@ app.use(
   })
 );
 
-
 app.use(cookieParser());
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 import userRouter from "./router/user.routes.js";
 
@@ -39,7 +46,6 @@ import productRouter from "./router/porduct.routes.js";
 import orderRoute from "./router/order.routes.js";
 
 import otpRoute from "./router/otp.routes.js";
-import { session } from "passport";
 
 app.get("/", (req, res) => {
   res.send("up and running");

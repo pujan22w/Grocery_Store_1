@@ -10,7 +10,7 @@ import jwt from "jsonwebtoken";
 
 import cookieParser from "cookie-parser";
 
-import { otpSender } from "./otp.controller.js";
+import passport from "passport";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -337,6 +337,61 @@ const requestPasswordReset = asyncHandler(async (req, res) => {
     .status(201)
     .json(new ApiResponse(201, "password changed successfully"));
 });
+
+const googleLoginSuccess = asyncHandler(async (req, res) => {
+  if (req.user) {
+    res
+      .status(200)
+      .json(new ApiResponse(200, req.user, "Successfully Logged In"));
+  } else {
+    throw ApiError(403, "not authorize");
+  }
+});
+
+const googleLoginFailed = asyncHandler(async (req, res) => {
+  throw ApiError(401, "login failed");
+});
+
+// Controller to initiate Google authentication
+
+const googleAuth = asyncHandler(async (req, res, next) => {
+  passport.authenticate("google", { scope: ["profile", "email"] })(
+    req,
+    res,
+    next
+  );
+});
+
+const googleCallback = asyncHandler(async (req, res, next) => {
+  passport.authenticate("google", {
+    successRedirect: process.env.CLIENT_URI,
+    failureRedirect: "/auth/login/failed",
+  })(req, res, next);
+});
+
+const googleLogout = asyncHandler(async (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      console.error("Logout error:", err);
+      return res.status(500).send("Logout failed.");
+    }
+
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Session destruction error:", err);
+        return res.status(500).send("Could not log out.");
+      }
+
+      res.clearCookie("connect.sid"); // Clear session cookie
+
+      console.log("User logged out. Redirecting to Google login.");
+
+      const googleLoginUrl = process.env.CLIENT_URI;
+      return res.redirect(googleLoginUrl);
+    });
+  });
+});
+
 export {
   registerUser,
   loginUser,
@@ -347,4 +402,9 @@ export {
   admin,
   findUser,
   requestPasswordReset,
+  googleLoginSuccess,
+  googleLoginFailed,
+  googleAuth,
+  googleCallback,
+  googleLogout,
 };
