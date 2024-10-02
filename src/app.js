@@ -21,20 +21,24 @@ app.use(
     limit: "16kb",
   })
 );
-
 import session from "express-session";
 
 app.use(express.static("public"));
 
+app.use(cookieParser());
+
 app.use(
   session({
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
-    secret: process.env.SESSION_SECRET,
+    cookie: {
+      secure: false, // Set true if using HTTPS
+      httpOnly: true,
+      maxAge: 1 * 60 * 1000, //1 minute
+    },
   })
 );
-
-app.use(cookieParser());
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -47,14 +51,16 @@ import orderRoute from "./router/order.routes.js";
 
 import otpRoute from "./router/otp.routes.js";
 
+import cartRoute from "./router/cart.router.js";
+
 app.get("/", (req, res) => {
   res.send("up and running");
 });
-
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/product", productRouter);
 app.use("/api/v1/order", orderRoute);
 app.use("/api/v1/otp", otpRoute);
+app.use("/api/v1/cart", cartRoute);
 
 export { app };
 

@@ -5,16 +5,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Serialize user into session
-passport.serializeUser((user, done) => {
-  done(null, user);
-});
-
-// Deserialize user from session
-passport.deserializeUser((user, done) => {
-  done(null, user);
-});
-
 // Configure Google Strategy
 passport.use(
   new GoogleStrategy(
@@ -27,6 +17,11 @@ passport.use(
     (req, accessToken, refreshToken, profile, done) => {
       // Here, you typically find or create a user in the database
       try {
+        // console.log("Profile Information:", profile);
+        // console.log("Email Information:", profile.emails[0].value);
+        // console.log(accessToken);
+        // console.log(refreshToken);
+
         // For now, we'll just return the profile as is
         done(null, profile);
       } catch (err) {
@@ -36,4 +31,13 @@ passport.use(
   )
 );
 
+// Serialize user into session
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+// Deserialize user from session
+passport.deserializeUser((user, done) => {
+  done(null, user);
+});
 export default passport;

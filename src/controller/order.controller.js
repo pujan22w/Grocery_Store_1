@@ -179,6 +179,7 @@ const getAllOrder = asyncHandler(async (_, res) => {
     res.status(200).json(ApiResponse(200, { order, nbHits: order.length }));
   } catch (error) {
     throw new ApiError(400, error?.message, " error while getting all orders");
+    
   }
 });
 export {

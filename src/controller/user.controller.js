@@ -338,58 +338,93 @@ const requestPasswordReset = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, "password changed successfully"));
 });
 
+// Controller to handle successful Google login
 const googleLoginSuccess = asyncHandler(async (req, res) => {
   if (req.user) {
     res
       .status(200)
       .json(new ApiResponse(200, req.user, "Successfully Logged In"));
   } else {
-    throw ApiError(403, "not authorize");
+    throw ApiError(403, "Not Authorized");
   }
 });
 
+// Controller to handle failed Google login
+
 const googleLoginFailed = asyncHandler(async (req, res) => {
-  throw ApiError(401, "login failed");
+  throw ApiError(401, "Login failed");
 });
 
 // Controller to initiate Google authentication
-
-const googleAuth = asyncHandler(async (req, res, next) => {
-  passport.authenticate("google", { scope: ["profile", "email"] })(
-    req,
-    res,
-    next
-  );
+const googleAuth = asyncHandler((req, res, next) => {
+  if (!req.user) {
+    // This is the initial request before authentication
+    console.log("Cookies: before login", req.cookies);
+    console.log("Session before login:", req.session);
+    passport.authenticate("google", { scope: ["profile", "email"] })(
+      req,
+      res,
+      next
+    );
+  } else {
+    // This is the callback after successful authentication
+    console.log("User is authenticated:", req.user);
+    next(); // Proceed to the next middleware or response handling
+  }
 });
 
-const googleCallback = asyncHandler(async (req, res, next) => {
-  passport.authenticate("google", {
-    successRedirect: process.env.CLIENT_URI,
-    failureRedirect: "/auth/login/failed",
+// Controller to handle Google authentication callback
+const googleCallback = asyncHandler((req, res, next) => {
+  passport.authenticate("google", (err, user, info) => {
+    if (err) {
+      return next(err); // Handle errors during authentication
+    }
+    if (!user) {
+      return res.redirect("/api/v1/users/google/login/failed"); // Redirect on failure
+    }
+
+    // Log in the user
+    req.logIn(user, (err) => {
+      if (err) {
+        return next(err); // Handle errors during login
+      }
+
+      // Redirect to the client URI upon successful login
+      return res.redirect(process.env.CLIENT_URI);
+    });
   })(req, res, next);
 });
 
-const googleLogout = asyncHandler(async (req, res) => {
-  req.logout((err) => {
-    if (err) {
-      console.error("Logout error:", err);
-      return res.status(500).send("Logout failed.");
-    }
+// Controller to handle logout
+const googleLogout = asyncHandler(async (req, res, next) => {
+  if (req.isAuthenticated()) {
+    console.log("sesson before log out:", req.session);
+    console.log("Cookies before logout:", req.cookies);
 
-    req.session.destroy((err) => {
+    await req.logout((err) => {
       if (err) {
-        console.error("Session destruction error:", err);
-        return res.status(500).send("Could not log out.");
+        return next(err);
       }
 
-      res.clearCookie("connect.sid"); // Clear session cookie
+      // Clear the session cookie
+      res.clearCookie("connect.sid", { path: "/" });
 
-      console.log("User logged out. Redirecting to Google login.");
+      // Destroy the session
+      req.session.destroy((err) => {
+        if (err) {
+          return next(err);
+        }
 
-      const googleLoginUrl = process.env.CLIENT_URI;
-      return res.redirect(googleLoginUrl);
+        console.log("Cookies after clearing:", req.cookies); // Check cookies after clearing
+        console.log("User after logout:", req.user); // Should be undefined or null
+        console.log("sesson after clearing:", req.session);
+        res.redirect("/"); // Redirect to home or login page
+      });
     });
-  });
+  } else {
+    console.log("User not authenticated");
+    res.redirect("/");
+  }
 });
 
 export {
