@@ -8,7 +8,6 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
       index: true,
-      unique: true,
     },
     category: {
       type: String,
