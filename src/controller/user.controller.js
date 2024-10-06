@@ -361,13 +361,10 @@ const googleLoginFailed = asyncHandler(async (req, res) => {
 const googleAuth = asyncHandler((req, res, next) => {
   if (!req.user) {
     // This is the initial request before authentication
-    console.log("Cookies: before login", req.cookies);
-    console.log("Session before login:", req.session);
-    passport.authenticate("google", { scope: ["profile", "email"] })(
-      req,
-      res,
-      next
-    );
+    passport.authenticate("google", {
+      scope: ["profile", "email"],
+      prompt: "select_account",
+    })(req, res, next);
   } else {
     // This is the callback after successful authentication
     console.log("User is authenticated:", req.user);

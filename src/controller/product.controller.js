@@ -27,7 +27,7 @@ const registerProduct = asyncHandler(async (req, res) => {
   //   throw new ApiError(400, "All fields are required");
   // }
 
-  const productLocalPath = req.file.path;
+  const productLocalPath = req.file?.path;
 
   if (!productLocalPath) {
     throw new ApiError(400, "product image local path is  required");
