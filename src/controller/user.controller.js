@@ -6,6 +6,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 
 import { ApiResponse } from "../utils/Apiresponse.js";
+
 import jwt from "jsonwebtoken";
 
 import cookieParser from "cookie-parser";
@@ -86,6 +87,10 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const otpemail = checkOtp.email;
   const dbotp = checkOtp.otp;
+  console.log(otpemail);
+  console.log(dbotp);
+  console.log(otp);
+  console.log(email);
 
   if (email !== otpemail || otp !== dbotp) {
     throw new ApiError(401, "invalid email  or otp ");
@@ -367,10 +372,11 @@ const googleAuth = asyncHandler((req, res, next) => {
     // This is the initial request before authentication
     console.log("Cookies: before login", req.cookies);
     console.log("Session before login:", req.session);
-    passport.authenticate("google", {
-      scope: ["profile", "email"],
-      prompt: "select_account",
-    })(req, res, next);
+    passport.authenticate("google", { scope: ["profile", "email"] })(
+      req,
+      res,
+      next
+    );
   } else {
     // This is the callback after successful authentication
     console.log("User is authenticated:", req.user);

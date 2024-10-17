@@ -9,6 +9,7 @@ import { uploadOnCloudinary } from "../utils/productImageUpload.js";
 import { ApiError } from "../utils/ApiError.js";
 
 import { ApiResponse } from "../utils/Apiresponse.js";
+import { sendmail } from "../utils/nodemailer.js";
 
 // rgeister product
 
@@ -50,8 +51,12 @@ const registerProduct = asyncHandler(async (req, res) => {
   const productCreated = await Product.findById(product._id);
 
   if (!productCreated) {
-    throw new ApiError(500, "something went wrong while  creating user");
+    throw new ApiError(500, "something went wrong while  creating product");
   }
+
+  const name=productname
+  
+
   return res
     .status(201)
     .json(

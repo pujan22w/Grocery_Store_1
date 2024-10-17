@@ -15,6 +15,13 @@ const otpSender = asyncHandler(async (req, res) => {
   }
   if (!validateEmail(email)) throw new ApiError(400, "Invalid email address");
   const existEmail = await OTP.findOne({ email: email });
+// <<<<<<< HEAD
+// =======
+
+  if (existEmail) {
+    await OTP.findOneAndDelete({ email: email });
+  }
+// >>>>>>> 8606c75a334b51ece495f12a0137eedcb243fef3
 
   if (existEmail) {
     await OTP.findOneAndDelete({ email: email });

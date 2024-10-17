@@ -12,6 +12,7 @@ const productSchema = new mongoose.Schema(
     category: {
       type: String,
       require: true,
+// <<<<<<< HEAD
       enum: [
         "Fruits",
         "Vegetables",
@@ -21,6 +22,9 @@ const productSchema = new mongoose.Schema(
         "Snacks",
         "Oil",
       ],
+// =======
+//       enum: ["Fruits", "Vegetables", " juice", "chocolates", "snacks"],
+// >>>>>>> 8606c75a334b51ece495f12a0137eedcb243fef3
       index: true,
     },
     price: {
