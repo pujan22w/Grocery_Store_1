@@ -5,6 +5,8 @@ import { Product } from "../models/product.model.js";
 import { asyncHandler } from "../utils/Asynchandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/Apiresponse.js";
+
+import { sendmail } from "../utils/nodemailer.js";
 // TODO:  reduce the product stock after order is made
 
 const createOrder = asyncHandler(async (req, res) => {
@@ -16,6 +18,8 @@ const createOrder = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Login first to order a product");
   }
 
+  const name = req.user.fullName;
+  const email = req.user.email;
   // Use provided shipping address or default address from user
   const finalShippingAddress = shippingAddress || user.address;
 
@@ -38,13 +42,9 @@ const createOrder = asyncHandler(async (req, res) => {
           `Only ${product.stock} units of stock are available for  ${product.productname}`
         );
       }
-      console.log(
-        `product.stock=${product.stock} product.productname ${product.productname} item.quantity${item.quantity} `
-      );
       product.stock -= item.quantity;
 
       await product.save();
-      console.log(product.stock);
 
       return {
         productId: product._id,
@@ -74,12 +74,47 @@ const createOrder = asyncHandler(async (req, res) => {
   const newOrder = new Order({
     totalPrice: totalPrice,
     customer: req.user._id,
+    user: name,
+    email: email,
     shippingAddress: finalShippingAddress, // Provided or default address  User who created the order
     orderItems: populatedOrderItems,
   });
 
   // Save the order to the database
   const savedOrder = await newOrder.save();
+
+  const mail = user.email;
+
+  const subject = " Order Successfull";
+  const message = `
+  <h1>Puzu Grocery Store</h1>
+  <p>Your order has been placed successfully!</p>
+  <br>
+  <p>Your shipping address is: <b>${finalShippingAddress}</b></p>
+  <p>The products are:</p>
+  <table border="1" cellpadding="10">
+    <thead>
+      <tr>
+        <th>Product Name</th>
+        <th>Quantity</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${populatedOrderItems
+        .map(
+          (item) => `
+      <tr>
+        <td>${item.name}</td>
+        <td>${item.quantity}</td>
+      </tr>`
+        )
+        .join("")}
+    </tbody>
+  </table>
+  <br>
+  <p>The total price is: <b>${totalPrice}</b></p>
+`;
+  sendmail(mail, subject, message);
 
   const userOrder = await Order.findById(savedOrder._id).select(
     "orderItems.name  orderItems.image totalPrice shippingAddress status createdAt orderItems.quantity"
@@ -97,7 +132,7 @@ const getCurrentUserOrder = asyncHandler(async (req, res) => {
     throw new ApiError(400, "please login first");
   }
   const order = await Order.find({ customer: userId }).select(
-    "orderItems.name orderItems.image totalPrice shippingAddress status createdAt"
+    "orderItems.name orderItems.image totalPrice shippingAddress quantity status createdAt"
   );
   if (!order) {
     throw new ApiError(400, "no order  have been made");
@@ -150,11 +185,11 @@ const cancleOrder = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "order cancled", order));
 });
 
-const manageOrder = asyncHandler(async (req, res) => {
+const deleteOrder = asyncHandler(async (req, res) => {
   try {
-    const { orderId } = req.params;
+    const { id: orderId } = req.params;
     const ORDER_STATUS_THAT_CAN_BE_REMOVED = ["CANCELED", "DELIVERED"];
-    const order = await Order.findById(orderId);
+    const order = await Order.findById({ _id: orderId });
     if (!order) {
       throw new ApiError(404, "no order has been made");
     }
@@ -163,23 +198,44 @@ const manageOrder = asyncHandler(async (req, res) => {
       throw new ApiError(400, `${order.status} order cannot be  deleted`);
     }
 
-    await order.remove();
+    await Order.findByIdAndDelete(orderId);
 
-    res.status(200).json(200, "order removed ");
+    res.status(200).json(new ApiResponse(200, "order removed success"));
   } catch (error) {
+    console.log(error.message);
+
     throw new ApiError(500, "error while removing the cancle order");
   }
 });
 
 //admin controller
 
+const manageUserOrder = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const order = await Order.findById({ _id: id });
+    if (!order) {
+      throw new ApiError(400, "order dose not exist");
+    }
+    if (!status) {
+      throw new ApiError(400, "status is not declared");
+    }
+  } catch (error) {
+    throw new ApiError(
+      400,
+      error?.message,
+      "error while  managing staus orders"
+    );
+  }
+});
+
 const getAllOrder = asyncHandler(async (_, res) => {
   try {
     const order = await Order.find();
-    res.status(200).json(ApiResponse(200, { order, nbHits: order.length }));
+    res.status(200).json(new ApiResponse(200, { order, nbHits: order.length }));
   } catch (error) {
-    throw new ApiError(400, error?.message, " error while getting all orders");
-    
+    throw new ApiError(400, error?.message, "error while getting all orders");
   }
 });
 export {
@@ -187,5 +243,5 @@ export {
   getCurrentUserOrder,
   cancleOrder,
   getAllOrder,
-  manageOrder,
+  deleteOrder,
 };
