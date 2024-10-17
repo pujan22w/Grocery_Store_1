@@ -14,7 +14,11 @@ const otpSender = asyncHandler(async (req, res) => {
     return regex.test(email);
   }
   if (!validateEmail(email)) throw new ApiError(400, "Invalid email address");
+  const existEmail = await OTP.findOne({ email: email });
 
+  if (existEmail) {
+    await OTP.findOneAndDelete({ email: email });
+  }
   const otp = otpGenerator.generate(7, {
     upperCaseAlphabets: false,
     specialChars: false,

@@ -27,7 +27,7 @@ const registerProduct = asyncHandler(async (req, res) => {
   //   throw new ApiError(400, "All fields are required");
   // }
 
-  const productLocalPath = req.file.path;
+  const productLocalPath = req.file?.path;
 
   if (!productLocalPath) {
     throw new ApiError(400, "product image local path is  required");
@@ -87,7 +87,7 @@ const filterProduct = asyncHandler(async (req, res) => {
 
     console.log(queryObject);
     const products = await Product.find(queryObject).select(
-      "-_id -createdAt -updatedAt -__v"
+      " -createdAt -updatedAt -__v"
     );
 
     return res.status(200).json(
@@ -130,13 +130,21 @@ const getProduct = asyncHandler(async (req, res, next) => {
 
 const updateProduct = asyncHandler(async (req, res, next) => {
   const role = req.role;
-
+  console.log("Received Body", req.body);
   if (role !== "admin") {
     throw new ApiError(401, "not authorize to access this route");
   }
   try {
     const { productname, category, price, stock, isavailable, weight } =
       req.body;
+    console.log("Updating Product:", {
+      productname,
+      category,
+      price,
+      stock,
+      isavailable,
+      weight,
+    });
     const { id: productID } = req.params;
     if (!Types.ObjectId.isValid(productID)) {
       throw new ApiError(400, "Invalid product ID format");

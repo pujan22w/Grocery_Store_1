@@ -4,7 +4,6 @@ import { ApiError } from "../utils/ApiError.js";
 import jwt from "jsonwebtoken";
 export const verifyJWT = asyncHandler(async (req, _, next) => {
   try {
-    // console.log("Access Token from Cookie:", req.cookies?.accessToken);
     // console.log("Authorization Header:", req.header("Authorization"));
     // console.log("Extracted Token:", token);
     const token =
@@ -29,7 +28,8 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
     req.user = user;
     req.role = role;
     next();
-  } catch (error) {
-    throw new ApiError(401, error?.message || "invalid access token");
+  } catch (error)   {
+    console.log("Access Token from Cookie:", req.cookies?.accessToken);
+    throw new ApiError(401, error?.message);
   }
 });

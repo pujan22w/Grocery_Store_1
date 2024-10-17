@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import moment from "moment";
 const userSchema = new mongoose.Schema(
   {
-    fullName: {
+    fullname: {
       type: String,
       required: true,
       lowercase: true,
@@ -44,7 +44,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlenght: 8,
     },
-    phone: {
+    phonenumber: {
       type: Number,
       required: true,
     },

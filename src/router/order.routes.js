@@ -18,7 +18,7 @@ const router = Router();
 router.route("/").post(verifyJWT, createOrder);
 router.route("/me").get(verifyJWT, getCurrentUserOrder);
 router.route("/cancle/:orderId").patch(verifyJWT, cancleOrder);
-router.route("/delete/order/:orderId").delete(verifyJWT, manageOrder);
+router.route("/delete/order/:id").delete(verifyJWT, manageOrder);
 
 // admin only route
 

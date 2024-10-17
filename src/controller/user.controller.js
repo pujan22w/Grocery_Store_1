@@ -38,9 +38,9 @@ const registerUser = asyncHandler(async (req, res) => {
     address,
     otp,
     email,
-    fullName,
+    fullname,
     password,
-    phone,
+    phonenumber,
     role,
     gender,
     dateOfBirth,
@@ -52,11 +52,15 @@ const registerUser = asyncHandler(async (req, res) => {
 
   if (!validateEmail(email)) throw new ApiError(400, "Invalid email address");
 
-  function validatePhoneNumber(phone) {
+  function validatePhoneNumber(phonenumber) {
     const regex = /(\+977)?[9][6-9]\d{8}/;
-    return regex.test(phone);
+    console.log("-------------------");
+
+    console.log(phonenumber);
+    return regex.test(phonenumber);
   }
-  if (!validatePhoneNumber(phone)) {
+  console.log(validatePhoneNumber(9807495755));
+  if (!validatePhoneNumber(phonenumber)) {
     throw new ApiError(400, "invalid phone number");
   }
 
@@ -67,7 +71,7 @@ const registerUser = asyncHandler(async (req, res) => {
   // ) {
   //   throw new ApiError(400, "All fields are required");
   // }
-  const lowercasefullName = fullName.toLowerCase();
+  // const lowercasefullName = fullName.toLowerCase();
 
   const existUserByEmail = await User.findOne({ email });
   if (existUserByEmail) {
@@ -88,10 +92,10 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   const user = await User.create({
-    fullName: lowercasefullName,
+    fullname,
     email,
     password,
-    phone,
+    phonenumber,
     address,
     role,
     dateOfBirth,
@@ -363,11 +367,10 @@ const googleAuth = asyncHandler((req, res, next) => {
     // This is the initial request before authentication
     console.log("Cookies: before login", req.cookies);
     console.log("Session before login:", req.session);
-    passport.authenticate("google", { scope: ["profile", "email"] })(
-      req,
-      res,
-      next
-    );
+    passport.authenticate("google", {
+      scope: ["profile", "email"],
+      prompt: "select_account",
+    })(req, res, next);
   } else {
     // This is the callback after successful authentication
     console.log("User is authenticated:", req.user);
